@@ -1,0 +1,157 @@
+@startuml
+
+title
+= 向设计师付款业务流程
+----
+end title
+
+|云智能|
+
+:推送订单;
+
+|订单中心|
+
+if (存在匹配的产品包付款方案？) then (是)
+    :创建设计师打款方案;
+else (否)
+    stop
+endif
+
+repeat
+    fork
+        |设计师运营|
+        if (已关联设计师？) then (否)
+            :关联设计师;
+        else (是)
+        endif
+        if (需要修改设计师？) then (是)
+            :修改设计师;
+        else (否)
+        endif
+    fork again
+        |项目经理|
+        if (数据有误？) then (是)
+            repeat
+                :数据订正;
+                |管理员|
+                :审批;
+            repeat while (审批是否通过？) is (否)
+            ->是;
+        else (否)
+        endif
+    fork again
+        |管理员|
+        :关闭订单;
+        stop
+        |项目经理|
+    end fork
+
+    |项目经理|
+    if (付款是否会超过订单95%？) then (是)
+        :线下处理;
+        stop
+    else (否)
+        :提交付款;
+    endif
+
+    if (付款信息有误？) then (是)
+        fork
+            |项目经理|
+            :撤回付款;
+        fork again
+            |财务|
+            :撤回付款;
+            |项目经理|
+        end fork
+    else (否)
+    endif
+repeat while (付款被撤回？) is (是)
+->否;
+
+repeat
+    |订单中心|
+    :付款（每周四）;
+
+    if (付款是否成功？) then (否)
+        |项目经理|
+        repeat
+            if (是否尾款？) then (是)
+            else (否)
+                |项目经理|
+                fork
+                    |设计师运营|
+                    if (是否更换过设计师？) then (否)
+                        if (是否修改设计师？) then (是)
+                            :修改设计师;
+                        else (否)
+                        endif
+                    else (是)
+                    endif
+                    |项目经理|
+                fork again
+                    |项目经理|
+                    :执行下一节点;
+                end fork
+            endif
+
+            :提交付款;
+
+            if (付款信息有误？) then (是)
+                fork
+                    |项目经理|
+                    :撤回付款;
+                fork again
+                    |财务|
+                    :撤回付款;
+                    |项目经理|
+                end fork
+            else (否)
+            endif
+        repeat while (付款被撤回？) is (是)
+        ->否;
+    else (是)
+        |订单中心|
+        if (是否首款？) then (否)
+            stop
+        else (是)
+        endif
+
+        |项目经理|
+        fork
+            :执行下一节点;
+        fork again
+            |管理员|
+            if (是否更换过设计师？) then (否)
+                if (是否更换设计师？) then (是)
+                    if (付款是否会超过订单金额的95%？) then (否)
+                        :更换设计师;
+                    else (是)
+                        :线下处理;
+                        stop
+                    endif
+                else (否)
+                endif
+            else (是)
+            endif
+
+            |项目经理|
+        end fork
+        repeat
+            :提交付款;
+            if (付款信息有误？) then (是)
+                fork
+                    |项目经理|
+                    :撤回付款;
+                fork again
+                    |财务|
+                    :撤回付款;
+                    |项目经理|
+                end fork
+            else (否)
+            endif
+        repeat while (付款被撤回？) is (是)
+        ->否;
+    endif
+repeat while ()
+
+@enduml
