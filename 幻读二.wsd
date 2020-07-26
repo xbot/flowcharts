@@ -1,0 +1,36 @@
+@startuml
+
+skinparam dpi 300
+
+title 更新并发事务插入的数据导致的幻读问题
+legend
+    事务 Tx1 与 Tx2 并发执行，age 列有非唯一索引。
+end legend
+
+actor Tx1
+database DB
+actor Tx2
+
+autonumber
+
+Tx1 --> DB: begin
+Tx2 --> DB: begin
+
+Tx1 --> DB: select * from users where id between 10 and 80
+note right of Tx1 #00CED1
+    | id   | age   | name   |
+    | 2    | 50    | donie  |
+end note
+
+Tx2 --> DB: insert into users (id, age, name) values (3, 50, 'donie')
+Tx2 --> DB: commit
+    
+Tx1 --> DB: update users set name = 'tom' where age = 50
+Tx1 --> DB: select * from users where id between 10 and 80
+note right of Tx1 #00CED1
+    | id   | age   | name   |
+    | 2    | 50    | tom    |
+    | 3    | 50    | tom    |
+end note
+
+@enduml
